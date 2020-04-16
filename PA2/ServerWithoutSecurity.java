@@ -4,6 +4,11 @@ import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.KeyFactory;
+import java.security.PrivateKey;
+import java.security.spec.PKCS8EncodedKeySpec;
 
 public class ServerWithoutSecurity {
 
@@ -69,5 +74,17 @@ public class ServerWithoutSecurity {
 		} catch (Exception e) {e.printStackTrace();}
 
 	}
+	
+	  public static PrivateKey get(String filename)
+			  throws Exception {
+			 
+				byte[] keyBytes = Files.readAllBytes(Paths.get(filename));
+			 
+				PKCS8EncodedKeySpec spec =
+			  	new PKCS8EncodedKeySpec(keyBytes);
+				KeyFactory kf = KeyFactory.getInstance("RSA");
+				return kf.generatePrivate(spec);
+			  }
+
 
 }
