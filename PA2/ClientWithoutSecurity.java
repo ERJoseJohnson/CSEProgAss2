@@ -47,7 +47,7 @@ public class ClientWithoutSecurity {
 			fromServer = new DataInputStream(clientSocket.getInputStream());
 
 			System.out.println("Sending file...");
-
+			
 			// Send the filename
 			toServer.writeInt(0);
 			toServer.writeInt(filename.getBytes().length);
@@ -82,16 +82,4 @@ public class ClientWithoutSecurity {
 		System.out.println("Program took: " + timeTaken/1000000.0 + "ms to run");
 	}
 	
-	  public static PublicKey get(String filename) throws Exception {
-			 
-//				byte[] keyBytes = Files.readAllBytes(Paths.get(filename));
-			 
-				InputStream fis = new FileInputStream("CA.crt");
-				CertificateFactory cf = CertificateFactory.getInstance("X.509");
-				X509Certificate CAcert =(X509Certificate)cf.generateCertificate(fis);
-				
-				PublicKey key = CAcert.getPublicKey();
-				return key;
-
-	  }
 }
