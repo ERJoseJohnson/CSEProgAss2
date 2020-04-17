@@ -2,3 +2,6 @@
 /ServerWithoutSecurity.class
 /ClientAuthProtocol.class
 /ServerAuthProtocol.class
+/ClientWithSecurity.class
+/ServerWithSecruity.class
+/ServerWithSecurity.class

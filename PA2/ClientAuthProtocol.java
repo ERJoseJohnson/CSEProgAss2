@@ -45,7 +45,7 @@ public class ClientAuthProtocol {
 		
 	
 	// Compares to see if the retrieved Nonce from the server is the same as the one that the client sent
-	public static boolean compareNoncewithDecryptedMessage(byte[] encryptedNonce) throws NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException {
+	public boolean compareNoncewithDecryptedMessage(byte[] encryptedNonce) throws NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException {
 		try {
 			decryptNonce(encryptedNonce);
 			boolean serverVerified = Arrays.equals(nonce, decryptedNonce);
@@ -71,13 +71,17 @@ public class ClientAuthProtocol {
 	
 	
 	// Returns the nonce that is sent to the server for authentication
-	public static byte[] getNonce(int n) {
+	public byte[] getNonce() {
 		return nonce;
+	}
+	
+	public int getNonceLength() {
+		return nonce.length;
 	}
 	
 	
 	// Generates and saves the nonce that needs to be sent to the server
-	public static byte[] generateNonce(int n) {
+	public byte[] generateNonce(int n) {
 		
 		String strNonce = getAlphaNumericString(n);
 		
@@ -116,14 +120,14 @@ public class ClientAuthProtocol {
 	
 	// Helper function for getServerPublicKey(String filename)
 	// Gets the public key of CA from the file that is sent from the server
-	public static void getServerCert(InputStream serverStream) throws Exception{
+	public void getServerCert(InputStream serverStream) throws Exception{
 //		CAcertFile = new FileInputStream(filename);
 		CertificateFactory cf = CertificateFactory.getInstance("X.509");
 		ServerCert =(X509Certificate)cf.generateCertificate(serverStream);
 	}
 	
 	
-	public static void verifyServerCert() {
+	public void verifyServerCert() {
 		try {
 			ServerCert.verify(CertificatePubKey);
 		}
@@ -146,7 +150,7 @@ public class ClientAuthProtocol {
 	}
 	
 	// Gets the public key that is present from the certificate that is sent from the server
-	public static PublicKey getServerPublicKey() throws Exception {
+	public PublicKey getServerPublicKey() throws Exception {
 		 
 //		getServerCert(serverStream);
 		ServerPubKey = ServerCert.getPublicKey();
