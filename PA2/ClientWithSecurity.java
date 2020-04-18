@@ -52,6 +52,52 @@ public class ClientWithSecurity {
 			System.out.println("Nonce that is being sent is "+new String(clientAuthentication.getNonce()));
 			toServer.write(clientAuthentication.getNonce());
 			
+			// Receive nonce from server
+			while(true) {
+				int packetType = fromServer.readInt();
+				if(packetType == 1) {
+					System.out.println("Receiving encrypted nonce...");
+
+					int lenOfEncryptedNonce = fromServer.readInt();
+					byte [] ecnryptedNonce = new byte[lenOfEncryptedNonce];
+					// Must use read fully!
+					// See: https://stackoverflow.com/questions/25897627/datainputstream-read-vs-datainputstream-readfully
+					fromServer.readFully(ecnryptedNonce, 0, lenOfEncryptedNonce);
+					System.out.println("The nonce received is "+new String(ecnryptedNonce));
+					break;
+				}
+				else {
+					System.out.println("I did not receive anything :(");
+					break;
+				}
+				
+			}
+			
+			System.out.println("Requesting CA signed cert...");
+			// Request for Certificate
+			toServer.writeInt(3);
+			
+			// Receive certificate
+			while(true) {
+				int packetType = fromServer.readInt();
+				if(packetType == 2) {
+					System.out.println("Receiving CA signed cert...");
+
+					int lenOfCert = fromServer.readInt();
+					byte [] ecnryptedCert = new byte[lenOfCert];
+					// Must use read fully!
+					// See: https://stackoverflow.com/questions/25897627/datainputstream-read-vs-datainputstream-readfully
+					fromServer.readFully(ecnryptedCert, 0, lenOfCert);
+					System.out.println("The nonce received is "+new String(ecnryptedCert));
+					break;
+				}
+				else {
+					System.out.println("I did not receive anything :(");
+					break;
+				}
+				
+			}
+			
 			// Decrypt Nonce 
 			
 			//Send Cert

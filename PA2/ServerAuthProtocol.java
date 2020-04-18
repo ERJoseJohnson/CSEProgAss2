@@ -25,7 +25,7 @@ public class ServerAuthProtocol {
 	private static X509Certificate ServerCert;
 	private static byte[] nonce;
 	private static byte[] encryptedNonce;
-	private static byte[] SeverCertByteArrayform;
+	private static byte[] ServerCertByteArrayform;
 //	private static InputStream CAcertFile;
 //	private static InputStream ServercertFile;
 	private static Cipher EncryptCipher;
@@ -46,7 +46,7 @@ public class ServerAuthProtocol {
 			FileInputStream CAcertFile = new FileInputStream(filename);
 			CertificateFactory cf = CertificateFactory.getInstance("X.509");
 			ServerCert = (X509Certificate)cf.generateCertificate(CAcertFile);
-			SeverCertByteArrayform = ServerCert.getEncoded();
+			ServerCertByteArrayform = ServerCert.getEncoded();
 		}
 		catch(Exception e) {
 			e.printStackTrace();
@@ -63,12 +63,13 @@ public class ServerAuthProtocol {
 		return kf.generatePrivate(spec);
 	}
 	
-	public static byte[] encryptNonce(byte[] nonce){
+	public void encryptNonce(byte[] incomingNonce){
 		try {
+			nonce = incomingNonce;
 			EncryptCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding"); 
 			EncryptCipher.init(Cipher.ENCRYPT_MODE, ServerPrivateKey);
-			encryptedNonce = EncryptCipher.doFinal(nonce);
-			return encryptedNonce;
+			encryptedNonce = EncryptCipher.doFinal(incomingNonce);
+//			return encryptedNonce;
 		}
 		catch (java.security.InvalidKeyException e) {
 			// TODO Auto-generated catch block
@@ -86,19 +87,27 @@ public class ServerAuthProtocol {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return nonce;
+//		return nonce;
 	}
 	
-	public static byte[] setNonce() {
-		return nonce;
+	public static void setNonce(byte[] incomingNonce) {
+		nonce = incomingNonce;
 	}
 	
-	public static byte[] getEncryptedNonce() {
+	public int getEncryptedNonceLength() {
+		return encryptedNonce.length;
+	}
+	
+	public byte[] getEncryptedNonce() {
 		return encryptedNonce;
 	}
 	
-	public static byte[] getSeverCertinByte() {
-		return SeverCertByteArrayform;
+	public byte[] getSeverCertinByte() {
+		return ServerCertByteArrayform;
+	}
+	
+	public int getServerCertlength() {
+		return ServerCertByteArrayform.length;
 	}
 
 }

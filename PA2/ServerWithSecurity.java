@@ -24,6 +24,8 @@ public class ServerWithSecurity {
 			connectionSocket = welcomeSocket.accept();
 			fromClient = new DataInputStream(connectionSocket.getInputStream());
 			toClient = new DataOutputStream(connectionSocket.getOutputStream());
+			
+			ServerAuthProtocol serverAuthenticationProtocol = new ServerAuthProtocol("private_key.der","example-dc04d420-7ef6-11ea-ae9d-89114163ae84.crt");
 
 			while (!connectionSocket.isClosed()) {
 
@@ -62,7 +64,7 @@ public class ServerWithSecurity {
 						toClient.close();
 						connectionSocket.close();
 					}
-				// If the packet is for authentication protocol
+				// If the packet is for nonce exchange
 				} else if (packetType == 2) {
 					System.out.println("Receiving nonce...");
 
@@ -72,6 +74,40 @@ public class ServerWithSecurity {
 					// See: https://stackoverflow.com/questions/25897627/datainputstream-read-vs-datainputstream-readfully
 					fromClient.readFully(nonce, 0, lenOfNonce);
 					System.out.println("The nonce received is "+new String(nonce));
+					
+					System.out.println("Encrypting nonce...");
+					// Store  and encrypt nonce to serverAuth Obj
+					serverAuthenticationProtocol.encryptNonce(nonce);
+					
+					System.out.println("Sending encrypted nonce...");
+					// Send Encrypted nonce
+					toClient.writeInt(1);
+					toClient.writeInt(serverAuthenticationProtocol.getEncryptedNonceLength());
+					System.out.println("The encrypted nonce is "+new String(serverAuthenticationProtocol.getEncryptedNonce()));
+					toClient.write(serverAuthenticationProtocol.getEncryptedNonce());
+					
+//					System.out.println("Closing connection...");
+//					// Close all connections 
+//					fromClient.close();
+//					toClient.close();
+//					connectionSocket.close();
+					
+				// If the packet is for certificate sending
+				} else if (packetType == 3) {
+					System.out.println("Certificate request received...");
+
+					System.out.println("Sending CA signed certificate...");
+					// Send Encrypted nonce
+					toClient.writeInt(2);
+					toClient.writeInt(serverAuthenticationProtocol.getServerCertlength());
+					System.out.println("The encrypted server Cert is "+new String(serverAuthenticationProtocol.getSeverCertinByte()));
+					toClient.write(serverAuthenticationProtocol.getSeverCertinByte());
+					
+					System.out.println("Closing connection...");
+					// Close all connections 
+					fromClient.close();
+					toClient.close();
+					connectionSocket.close();
 				}
 
 			}
