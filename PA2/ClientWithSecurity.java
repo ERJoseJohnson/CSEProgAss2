@@ -9,7 +9,7 @@ import java.net.Socket;
 public class ClientWithSecurity {
 	public static void main(String[] args) {
 
-    	String filename = "100000.txt";
+    	String filename = "10000.txt";
     	if (args.length > 0) filename = args[0];
 
     	String serverAddress = "localhost";
@@ -142,13 +142,14 @@ public class ClientWithSecurity {
 				byte[] encryptedFileBuffer = clientAuthentication.encryptFileBits(fromFileBuffer);
 				System.out.println("The length of the encrypted file bit is "+encryptedFileBuffer.length);
 				toServer.writeInt(1);
+				toServer.writeInt(numBytes);
 				toServer.writeInt(encryptedFileBuffer.length);
 				toServer.write(encryptedFileBuffer);
 				toServer.flush();
 			}
 	        
 	        // Signal end of file transmission
-	        toServer.writeInt(99);
+//	        toServer.writeInt(99);
 
 	        bufferedFileInputStream.close();
 	        fileInputStream.close();

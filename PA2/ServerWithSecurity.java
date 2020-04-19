@@ -48,17 +48,32 @@ public class ServerWithSecurity {
 				// If the packet is for transferring a chunk of the file
 				} else if (packetType == 1) {
 
+					// Remember that decrypted block is always 128 bytes long because of padding
+					// This means that to know when the file is finished, we can just send the actual byte length as well
+					// instead of sending another integer to check if the file is finished
 					int numBytes = fromClient.readInt();
-					byte [] block = new byte[numBytes];
-					fromClient.readFully(block, 0, numBytes);
+					int encryptedByteLen = fromClient.readInt();
+					byte [] block = new byte[encryptedByteLen];
+					fromClient.readFully(block, 0, encryptedByteLen);
 					byte[] decryptedBlock = serverAuthenticationProtocol.decryptFileBits(block);
 
+					// Therefore checking the actual length of the chunk of the file that is being sent shows if the file is at the end
 					if (numBytes > 0) {
-						bufferedFileOutputStream.write(decryptedBlock, 0, decryptedBlock.length);
-						bufferedFileOutputStream.flush();
+						// numBytes makes sure that no extra padded information on the last chunk of the file is written to the file
+						bufferedFileOutputStream.write(decryptedBlock, 0, numBytes);
+						System.out.println("Incoming: "+new String(decryptedBlock));
+//						bufferedFileOutputStream.flush();
 					
 					}
-					// Since padded, number of bytes will never reach 117 but stay at 128
+					if (numBytes < 117) {
+						System.out.println("Closing connection...");
+
+						if (bufferedFileOutputStream != null) bufferedFileOutputStream.close();
+						if (bufferedFileOutputStream != null) fileOutputStream.close();
+						fromClient.close();
+						toClient.close();
+						connectionSocket.close();
+					}
 
 				// If the packet is for nonce exchange
 				} else if (packetType == 2) {
@@ -105,15 +120,15 @@ public class ServerWithSecurity {
 //					toClient.close();
 //					connectionSocket.close();
 				}
-				else if (packetType == 99){
-					System.out.println("Closing connection...");
-					
-					if (bufferedFileOutputStream != null) bufferedFileOutputStream.close();
-					if (bufferedFileOutputStream != null) fileOutputStream.close();
-					fromClient.close();
-					toClient.close();
-					connectionSocket.close();
-				}
+//				else if (packetType == 99){
+//					System.out.println("Closing connection...");
+//					
+//					if (bufferedFileOutputStream != null) bufferedFileOutputStream.close();
+//					if (bufferedFileOutputStream != null) fileOutputStream.close();
+//					fromClient.close();
+//					toClient.close();
+//					connectionSocket.close();
+//				}
 
 			}
 		} catch (Exception e) {e.printStackTrace();}

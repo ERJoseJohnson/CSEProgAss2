@@ -113,7 +113,7 @@ public class ServerAuthProtocol {
 	public byte[] decryptFileBits(byte[] encryptedFileBits) throws NoSuchAlgorithmException, NoSuchPaddingException, java.security.InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 		decryptCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding"); 
 		decryptCipher.init(Cipher.DECRYPT_MODE, ServerPrivateKey);
-		System.out.println("Length of encrypted is "+encryptedFileBits.length);
+//		System.out.println("Length of encrypted is "+encryptedFileBits.length);
 		byte[] decrypted =  decryptCipher.doFinal(encryptedFileBits);
 		return decryptCipher.doFinal(encryptedFileBits);
 		
