@@ -51,19 +51,15 @@ public class ServerWithSecurity {
 					int numBytes = fromClient.readInt();
 					byte [] block = new byte[numBytes];
 					fromClient.readFully(block, 0, numBytes);
+					byte[] decryptedBlock = serverAuthenticationProtocol.decryptFileBits(block);
 
-					if (numBytes > 0)
-						bufferedFileOutputStream.write(block, 0, numBytes);
-
-					if (numBytes < 117) {
-						System.out.println("Closing connection...");
-
-						if (bufferedFileOutputStream != null) bufferedFileOutputStream.close();
-						if (bufferedFileOutputStream != null) fileOutputStream.close();
-						fromClient.close();
-						toClient.close();
-						connectionSocket.close();
+					if (numBytes > 0) {
+						bufferedFileOutputStream.write(decryptedBlock, 0, decryptedBlock.length);
+						bufferedFileOutputStream.flush();
+					
 					}
+					// Since padded, number of bytes will never reach 117 but stay at 128
+
 				// If the packet is for nonce exchange
 				} else if (packetType == 2) {
 					System.out.println("Receiving nonce...");
@@ -103,8 +99,17 @@ public class ServerWithSecurity {
 					System.out.println("The encrypted server Cert is "+new String(serverAuthenticationProtocol.getSeverCertinByte()));
 					toClient.write(serverAuthenticationProtocol.getSeverCertinByte());
 					
-					System.out.println("Closing connection...");
+//					System.out.println("Closing connection...");
 					// Close all connections 
+//					fromClient.close();
+//					toClient.close();
+//					connectionSocket.close();
+				}
+				else if (packetType == 99){
+					System.out.println("Closing connection...");
+					
+					if (bufferedFileOutputStream != null) bufferedFileOutputStream.close();
+					if (bufferedFileOutputStream != null) fileOutputStream.close();
 					fromClient.close();
 					toClient.close();
 					connectionSocket.close();

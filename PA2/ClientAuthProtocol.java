@@ -23,10 +23,11 @@ public class ClientAuthProtocol {
 	private static X509Certificate CAcert;
 	private static X509Certificate ServerCert;
 	private static byte[] nonce;
+	private static byte[] encryptedNonce;
 	private static byte[] decryptedNonce;
 	private static InputStream CAcertFile;
-	private static InputStream ServercertFile;
-//	private static Cipher EncryptCipher;
+//	private static InputStream ServercertFile;
+	private static Cipher encryptCipher;
 	private static Cipher decryptCipher;
 	
 	public ClientAuthProtocol(String fileName) throws FileNotFoundException{
@@ -45,7 +46,7 @@ public class ClientAuthProtocol {
 		
 	
 	// Compares to see if the retrieved Nonce from the server is the same as the one that the client sent
-	public boolean compareNoncewithDecryptedMessage(byte[] encryptedNonce) throws NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException {
+	public boolean compareNoncewithDecryptedMessage() throws NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException {
 		try {
 			decryptNonce(encryptedNonce);
 			boolean serverVerified = Arrays.equals(nonce, decryptedNonce);
@@ -67,6 +68,11 @@ public class ClientAuthProtocol {
 		decryptCipher.init(Cipher.DECRYPT_MODE, ServerPubKey);
 		
 		decryptedNonce = decryptCipher.doFinal(encryptedNonce);
+	}
+	
+	// Retrieves encrypted nonce and saves it as a variable
+	public void setEcnryptedNonce(byte[] encryptNonce) {
+		encryptedNonce = encryptNonce;
 	}
 	
 	
@@ -120,10 +126,11 @@ public class ClientAuthProtocol {
 	
 	// Helper function for getServerPublicKey(String filename)
 	// Gets the public key of CA from the file that is sent from the server
-	public void getServerCert(InputStream serverStream) throws Exception{
+	public void getServerCertandPubKey(InputStream serverStream) throws Exception{
 //		CAcertFile = new FileInputStream(filename);
 		CertificateFactory cf = CertificateFactory.getInstance("X.509");
 		ServerCert =(X509Certificate)cf.generateCertificate(serverStream);
+		ServerPubKey = ServerCert.getPublicKey();
 	}
 	
 	
@@ -153,9 +160,14 @@ public class ClientAuthProtocol {
 	public PublicKey getServerPublicKey() throws Exception {
 		 
 //		getServerCert(serverStream);
-		ServerPubKey = ServerCert.getPublicKey();
+//		ServerPubKey = ServerCert.getPublicKey();
 		return ServerPubKey;
 	  }
 	
-	  
+	  public byte[] encryptFileBits(byte[] fileBits) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+			encryptCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+			encryptCipher.init(Cipher.ENCRYPT_MODE, ServerPubKey);
+			return encryptCipher.doFinal(fileBits);
+		
+	  }
 }

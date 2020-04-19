@@ -59,7 +59,7 @@ public class ServerAuthProtocol {
 					 
 		PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
 		KeyFactory kf = KeyFactory.getInstance("RSA");
-		kf.generatePrivate(spec);
+//		kf.generatePrivate(spec);
 		return kf.generatePrivate(spec);
 	}
 	
@@ -108,6 +108,15 @@ public class ServerAuthProtocol {
 	
 	public int getServerCertlength() {
 		return ServerCertByteArrayform.length;
+	}
+	
+	public byte[] decryptFileBits(byte[] encryptedFileBits) throws NoSuchAlgorithmException, NoSuchPaddingException, java.security.InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+		decryptCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding"); 
+		decryptCipher.init(Cipher.DECRYPT_MODE, ServerPrivateKey);
+		System.out.println("Length of encrypted is "+encryptedFileBits.length);
+		byte[] decrypted =  decryptCipher.doFinal(encryptedFileBits);
+		return decryptCipher.doFinal(encryptedFileBits);
+		
 	}
 
 }

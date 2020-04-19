@@ -1,13 +1,15 @@
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.net.Socket;
 
 public class ClientWithSecurity {
 	public static void main(String[] args) {
 
-    	String filename = "100.txt";
+    	String filename = "100000.txt";
     	if (args.length > 0) filename = args[0];
 
     	String serverAddress = "localhost";
@@ -59,15 +61,16 @@ public class ClientWithSecurity {
 					System.out.println("Receiving encrypted nonce...");
 
 					int lenOfEncryptedNonce = fromServer.readInt();
-					byte [] ecnryptedNonce = new byte[lenOfEncryptedNonce];
+					byte [] encryptedNonce = new byte[lenOfEncryptedNonce];
 					// Must use read fully!
 					// See: https://stackoverflow.com/questions/25897627/datainputstream-read-vs-datainputstream-readfully
-					fromServer.readFully(ecnryptedNonce, 0, lenOfEncryptedNonce);
-					System.out.println("The nonce received is "+new String(ecnryptedNonce));
+					fromServer.readFully(encryptedNonce, 0, lenOfEncryptedNonce);
+					System.out.println("The nonce received is "+new String(encryptedNonce));
+					clientAuthentication.setEcnryptedNonce(encryptedNonce);
 					break;
 				}
 				else {
-					System.out.println("I did not receive anything :(");
+					System.out.println("I did not receive the nonce :(");
 					break;
 				}
 				
@@ -88,47 +91,67 @@ public class ClientWithSecurity {
 					// Must use read fully!
 					// See: https://stackoverflow.com/questions/25897627/datainputstream-read-vs-datainputstream-readfully
 					fromServer.readFully(ecnryptedCert, 0, lenOfCert);
-					System.out.println("The nonce received is "+new String(ecnryptedCert));
+					System.out.println("The certificate received is "+new String(ecnryptedCert));
+					InputStream serverCertStream= new ByteArrayInputStream(ecnryptedCert);
+					clientAuthentication.getServerCertandPubKey(serverCertStream);
 					break;
 				}
 				else {
-					System.out.println("I did not receive anything :(");
+					System.out.println("I did not receive the certificate :(");
 					break;
 				}
 				
 			}
 			
-			// Decrypt Nonce 
+			// Validate cert
+			clientAuthentication.verifyServerCert();
 			
-			//Send Cert
+			// Decrypt and compare Nonce 
+			boolean verified = clientAuthentication.compareNoncewithDecryptedMessage();
+			if(verified) {
+				System.out.println("Server is verified");
+			}
+			else {
+				System.out.println("Server is not verified");
+			}
 			
-			//Reveive file
+			// Begin file sending
 			
-//			// Send the filename
-//			toServer.writeInt(0);
-//			toServer.writeInt(filename.getBytes().length);
-//			toServer.write(filename.getBytes());
-//			//toServer.flush();
-//
-//			// Open the file
-//			fileInputStream = new FileInputStream(filename);
-//			bufferedFileInputStream = new BufferedInputStream(fileInputStream);
-//
-//	        byte [] fromFileBuffer = new byte[117];
-//
-//	        // Send the file
-//	        for (boolean fileEnded = false; !fileEnded;) {
-//				numBytes = bufferedFileInputStream.read(fromFileBuffer);
-//				fileEnded = numBytes < 117;
-//
-//				toServer.writeInt(1);
-//				toServer.writeInt(numBytes);
-//				toServer.write(fromFileBuffer);
-//				toServer.flush();
-//			}
+			// Start with filename
+			toServer.writeInt(0);
+			toServer.writeInt(filename.getBytes().length);
+			// Encrypt filename byte array
+//			byte[] encryptedBytes = clientAuthentication.encryptFileBits(filename.getBytes());
+//			toServer.write(encryptedBytes);
+			toServer.write(filename.getBytes());
+			//toServer.flush();
 
-//	        bufferedFileInputStream.close();
-//	        fileInputStream.close();
+			// Open the file
+			fileInputStream = new FileInputStream(filename);
+			bufferedFileInputStream = new BufferedInputStream(fileInputStream);
+
+	        byte [] fromFileBuffer = new byte[117];
+
+	        // Send the file
+	        for (boolean fileEnded = false; !fileEnded;) {
+				numBytes = bufferedFileInputStream.read(fromFileBuffer);
+				fileEnded = numBytes < 117;
+
+				System.out.println("Length of byte array from file stream buffer "+fromFileBuffer.length);
+				
+				byte[] encryptedFileBuffer = clientAuthentication.encryptFileBits(fromFileBuffer);
+				System.out.println("The length of the encrypted file bit is "+encryptedFileBuffer.length);
+				toServer.writeInt(1);
+				toServer.writeInt(encryptedFileBuffer.length);
+				toServer.write(encryptedFileBuffer);
+				toServer.flush();
+			}
+	        
+	        // Signal end of file transmission
+	        toServer.writeInt(99);
+
+	        bufferedFileInputStream.close();
+	        fileInputStream.close();
 
 			System.out.println("Closing connection...");
 
