@@ -33,7 +33,7 @@ public class ServerAuthProtocol {
 	
 	public ServerAuthProtocol(String privateKeyFilename, String ServerCertFilename) {
 		try {
-			ServerPrivateKey = getServerPrivateKey(privateKeyFilename);
+			ServerPrivateKey = generateServerPrivateKey(privateKeyFilename);
 			getServerCert(ServerCertFilename);
 		}
 		catch(Exception e) {
@@ -53,7 +53,7 @@ public class ServerAuthProtocol {
 		}
 	}
 	
-	private static PrivateKey getServerPrivateKey(String filename) throws Exception {
+	private static PrivateKey generateServerPrivateKey(String filename) throws Exception {
 				 
 		byte[] keyBytes = Files.readAllBytes(Paths.get(filename));
 					 
@@ -61,6 +61,10 @@ public class ServerAuthProtocol {
 		KeyFactory kf = KeyFactory.getInstance("RSA");
 //		kf.generatePrivate(spec);
 		return kf.generatePrivate(spec);
+	}
+	
+	public PrivateKey getServerPrivateKey() {
+		return ServerPrivateKey;
 	}
 	
 	public void encryptNonce(byte[] incomingNonce){
