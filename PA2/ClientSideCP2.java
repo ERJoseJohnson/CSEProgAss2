@@ -21,7 +21,7 @@ public class ClientSideCP2 {
 	
 	public static void main(String[] args) {
 
-    	String filename = "100.txt";
+    	String filename = "5000.txt";
     	if (args.length > 0) filename = args[0];
 
     	String serverAddress = "localhost";
@@ -145,44 +145,44 @@ public class ClientSideCP2 {
 			toServer.writeInt(encryptedKey.length);
 			toServer.write(encryptedKey);
 			
-//			// Begin file sending
-//			
-//			// Start with filename
-//			toServer.writeInt(0);
-//			toServer.writeInt(filename.getBytes().length);
-//			// Encrypt filename byte array
-////			byte[] encryptedBytes = clientAuthentication.encryptFileBits(filename.getBytes());
-////			toServer.write(encryptedBytes);
-//			toServer.write(filename.getBytes());
-//			//toServer.flush();
-//
-//			// Open the file
-//			fileInputStream = new FileInputStream(filename);
-//			bufferedFileInputStream = new BufferedInputStream(fileInputStream);
-//
-//	        byte [] fromFileBuffer = new byte[117];
-//
-//	        // Send the file
-//	        for (boolean fileEnded = false; !fileEnded;) {
-//				numBytes = bufferedFileInputStream.read(fromFileBuffer);
-//				fileEnded = numBytes < 117;
-//
-//				System.out.println("Length of byte array from file stream buffer "+fromFileBuffer.length);
-//				
-//				byte[] encryptedFileBuffer = clientAuthentication.encryptFileBits(fromFileBuffer);
-//				System.out.println("The length of the encrypted file bit is "+encryptedFileBuffer.length);
-//				toServer.writeInt(1);
-//				toServer.writeInt(numBytes);
-//				toServer.writeInt(encryptedFileBuffer.length);
-//				toServer.write(encryptedFileBuffer);
-//				toServer.flush();
-//			}
-//	        
-//	        // Signal end of file transmission
-////	        toServer.writeInt(99);
-//
-//	        bufferedFileInputStream.close();
-//	        fileInputStream.close();
+			// Begin file sending
+			
+			// Start with filename
+			toServer.writeInt(0);
+			toServer.writeInt(filename.getBytes().length);
+			// Encrypt filename byte array
+//			byte[] encryptedBytes = clientAuthentication.encryptFileBits(filename.getBytes());
+//			toServer.write(encryptedBytes);
+			toServer.write(filename.getBytes());
+			//toServer.flush();
+
+			// Open the file
+			fileInputStream = new FileInputStream(filename);
+			bufferedFileInputStream = new BufferedInputStream(fileInputStream);
+
+	        byte [] fromFileBuffer = new byte[117];
+
+	        // Send the file
+	        for (boolean fileEnded = false; !fileEnded;) {
+				numBytes = bufferedFileInputStream.read(fromFileBuffer);
+				fileEnded = numBytes < 117;
+
+				System.out.println("Length of byte array from file stream buffer "+fromFileBuffer.length);
+				
+				byte[] encryptedFileBuffer = encryptFileBytes(fromFileBuffer);
+				System.out.println("The length of the encrypted file bit is "+encryptedFileBuffer.length);
+				toServer.writeInt(1);
+				toServer.writeInt(numBytes);
+				toServer.writeInt(encryptedFileBuffer.length);
+				toServer.write(encryptedFileBuffer);
+				toServer.flush();
+			}
+	        
+	        // Signal end of file transmission
+//	        toServer.writeInt(99);
+
+	        bufferedFileInputStream.close();
+	        fileInputStream.close();
 
 			System.out.println("Closing connection...");
 

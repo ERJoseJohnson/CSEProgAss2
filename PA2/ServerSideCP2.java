@@ -4,12 +4,18 @@ import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 public class ServerSideCP2 {
+	private static SecretKey sessionKey;
 	public static void main(String[] args) {
 
     	int port = 4321;
@@ -23,7 +29,6 @@ public class ServerSideCP2 {
 		FileOutputStream fileOutputStream = null;
 		BufferedOutputStream bufferedFileOutputStream = null;
 		
-		SecretKey sessionKey;
 
 		try {
 			welcomeSocket = new ServerSocket(port);
@@ -48,7 +53,7 @@ public class ServerSideCP2 {
 					// See: https://stackoverflow.com/questions/25897627/datainputstream-read-vs-datainputstream-readfully
 					fromClient.readFully(filename, 0, numBytes);
 
-					fileOutputStream = new FileOutputStream("recv_"+new String(filename, 0, numBytes));
+					fileOutputStream = new FileOutputStream("recv_CP2_"+new String(filename, 0, numBytes));
 					bufferedFileOutputStream = new BufferedOutputStream(fileOutputStream);
 
 				// If the packet is for transferring a chunk of the file
@@ -61,7 +66,7 @@ public class ServerSideCP2 {
 					int encryptedByteLen = fromClient.readInt();
 					byte [] block = new byte[encryptedByteLen];
 					fromClient.readFully(block, 0, encryptedByteLen);
-					byte[] decryptedBlock = serverAuthenticationProtocol.decryptFileBits(block);
+					byte[] decryptedBlock = decryptFileBytes(block);
 
 					// Therefore checking the actual length of the chunk of the file that is being sent shows if the file is at the end
 					if (numBytes > 0) {
@@ -141,14 +146,21 @@ public class ServerSideCP2 {
 					System.out.println("Saving Session Key.....");
 					sessionKey = new SecretKeySpec(decryptedSessionKey, 0, decryptedSessionKey.length,"AES");
 					
-					System.out.println("Closing connection...");
-//					 Close all connections 
-					fromClient.close();
-					toClient.close();
-					connectionSocket.close();
+//					System.out.println("Closing connection...");
+////					 Close all connections 
+//					fromClient.close();
+//					toClient.close();
+//					connectionSocket.close();
 				}
 
 			}
 		} catch (Exception e) {e.printStackTrace();}
+	}
+	
+	private static byte[] decryptFileBytes(byte[] fileBytes) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+		Cipher sessionCipher = Cipher.getInstance("AES/ECB/PKCS5Padding"); 
+		sessionCipher.init(Cipher.DECRYPT_MODE, sessionKey);
+		byte[] decryptedFileBytes = sessionCipher.doFinal(fileBytes);
+		return decryptedFileBytes;
 	}
 }

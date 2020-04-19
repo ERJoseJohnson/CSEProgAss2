@@ -42,7 +42,7 @@ public class ServerSideCP1 {
 					// See: https://stackoverflow.com/questions/25897627/datainputstream-read-vs-datainputstream-readfully
 					fromClient.readFully(filename, 0, numBytes);
 
-					fileOutputStream = new FileOutputStream("recv_"+new String(filename, 0, numBytes));
+					fileOutputStream = new FileOutputStream("recv_CP1_"+new String(filename, 0, numBytes));
 					bufferedFileOutputStream = new BufferedOutputStream(fileOutputStream);
 
 				// If the packet is for transferring a chunk of the file
