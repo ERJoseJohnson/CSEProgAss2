@@ -5,7 +5,7 @@ import java.io.FileOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class ServerWithSecurity {
+public class ServerSideCP1 {
 	public static void main(String[] args) {
 
     	int port = 4321;
@@ -84,7 +84,7 @@ public class ServerWithSecurity {
 					// Must use read fully!
 					// See: https://stackoverflow.com/questions/25897627/datainputstream-read-vs-datainputstream-readfully
 					fromClient.readFully(nonce, 0, lenOfNonce);
-//					System.out.println("The nonce received is "+new String(nonce));
+					System.out.println("The nonce received is "+new String(nonce));
 					
 					System.out.println("Encrypting nonce...");
 					// Store  and encrypt nonce to serverAuth Obj
@@ -94,7 +94,7 @@ public class ServerWithSecurity {
 					// Send Encrypted nonce
 					toClient.writeInt(1);
 					toClient.writeInt(serverAuthenticationProtocol.getEncryptedNonceLength());
-//					System.out.println("The encrypted nonce is "+new String(serverAuthenticationProtocol.getEncryptedNonce()));
+					System.out.println("The encrypted nonce is "+new String(serverAuthenticationProtocol.getEncryptedNonce()));
 					toClient.write(serverAuthenticationProtocol.getEncryptedNonce());
 					
 //					System.out.println("Closing connection...");
@@ -108,17 +108,17 @@ public class ServerWithSecurity {
 					System.out.println("Certificate request received...");
 
 					System.out.println("Sending CA signed certificate...");
-					// Send Server Cert
+					// Send Encrypted nonce
 					toClient.writeInt(2);
 					toClient.writeInt(serverAuthenticationProtocol.getServerCertlength());
-//					System.out.println("The encrypted server Cert is "+new String(serverAuthenticationProtocol.getSeverCertinByte()));
+					System.out.println("The encrypted server Cert is "+new String(serverAuthenticationProtocol.getSeverCertinByte()));
 					toClient.write(serverAuthenticationProtocol.getSeverCertinByte());
 					
-					System.out.println("Closing connection...");
+//					System.out.println("Closing connection...");
 					// Close all connections 
-					fromClient.close();
-					toClient.close();
-					connectionSocket.close();
+//					fromClient.close();
+//					toClient.close();
+//					connectionSocket.close();
 				}
 //				else if (packetType == 99){
 //					System.out.println("Closing connection...");
@@ -134,4 +134,3 @@ public class ServerWithSecurity {
 		} catch (Exception e) {e.printStackTrace();}
 	}
 }
-
