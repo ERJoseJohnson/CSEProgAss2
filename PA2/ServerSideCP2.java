@@ -73,7 +73,7 @@ public class ServerSideCP2 {
 						// numBytes makes sure that no extra padded information on the last chunk of the file is written to the file
 						bufferedFileOutputStream.write(decryptedBlock, 0, numBytes);
 						System.out.println("Incoming: "+new String(decryptedBlock));
-//						bufferedFileOutputStream.flush();
+						bufferedFileOutputStream.flush();
 					
 					}
 					if (numBytes < 117) {
