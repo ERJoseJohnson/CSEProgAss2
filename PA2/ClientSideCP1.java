@@ -103,7 +103,7 @@ public class ClientSideCP1 {
 				}
 				else {
 					System.out.println("I did not receive the certificate :(");
-					break;
+//					break;
 				}
 				
 			}
