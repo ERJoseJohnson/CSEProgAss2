@@ -44,16 +44,18 @@ public class ClientSideCP1 {
 			
 			ClientAuthProtocol clientAuthentication = new ClientAuthProtocol("cacse.crt");
 			
-			System.out.println("Generating Nonce...");
 			// Generate Nonce
+			System.out.println("Generating Nonce...");
 			clientAuthentication.generateNonce(8);
 			
-			System.out.println("Sending nonce");
+			
 			// Sending Nonce
+			System.out.println("Sending nonce");
 			toServer.writeInt(2);
 			toServer.writeInt(clientAuthentication.getNonceLength());
 			System.out.println("Nonce that is being sent is "+new String(clientAuthentication.getNonce()));
 			toServer.write(clientAuthentication.getNonce());
+			
 			
 			// Receive nonce from server
 			while(true) {
@@ -63,9 +65,8 @@ public class ClientSideCP1 {
 
 					int lenOfEncryptedNonce = fromServer.readInt();
 					byte [] encryptedNonce = new byte[lenOfEncryptedNonce];
-					// Must use read fully!
-					// See: https://stackoverflow.com/questions/25897627/datainputstream-read-vs-datainputstream-readfully
-					fromServer.readFully(encryptedNonce, 0, lenOfEncryptedNonce);
+
+					
 					System.out.println("The nonce received is "+new String(encryptedNonce));
 					clientAuthentication.setEcnryptedNonce(encryptedNonce);
 					break;
@@ -76,10 +77,12 @@ public class ClientSideCP1 {
 				}
 				
 			}
+
 			
-			System.out.println("Requesting CA signed cert...");
 			// Request for Certificate
+			System.out.println("Requesting CA signed cert...");
 			toServer.writeInt(3);
+			
 			
 			// Receive certificate
 			while(true) {
@@ -89,11 +92,12 @@ public class ClientSideCP1 {
 
 					int lenOfCert = fromServer.readInt();
 					byte [] ecnryptedCert = new byte[lenOfCert];
-					// Must use read fully!
-					// See: https://stackoverflow.com/questions/25897627/datainputstream-read-vs-datainputstream-readfully
 					fromServer.readFully(ecnryptedCert, 0, lenOfCert);
+					
+					
+					// Decrypt Server cert and get server  Public key
 					System.out.println("The certificate received is "+new String(ecnryptedCert));
-					InputStream serverCertStream= new ByteArrayInputStream(ecnryptedCert);
+					InputStream serverCertStream= new ByteArrayInputStream(ecnryptedCert);	
 					clientAuthentication.getServerCertandPubKey(serverCertStream);
 					break;
 				}
@@ -104,10 +108,12 @@ public class ClientSideCP1 {
 				
 			}
 			
-			// Validate cert
+			
+			// Verify certificate
 			clientAuthentication.verifyServerCert();
 			
-			// Decrypt and compare Nonce 
+			
+			// Decrypt and compare nonce 
 			boolean verified = clientAuthentication.compareNoncewithDecryptedMessage();
 			if(verified) {
 				System.out.println("Server is verified");
@@ -116,7 +122,10 @@ public class ClientSideCP1 {
 				System.out.println("Server is not verified");
 			}
 			
-			// Begin file sending
+			
+			/* 
+			 * Begin file sending
+			*/
 			
 			// Start with filename
 			toServer.writeInt(0);
@@ -140,8 +149,12 @@ public class ClientSideCP1 {
 
 				System.out.println("Length of byte array from file stream buffer "+fromFileBuffer.length);
 				
+				// Encrypting file chunks with server private key 
+				// show the function inside ClientAuthProtocol class
 				byte[] encryptedFileBuffer = clientAuthentication.encryptFileBits(fromFileBuffer);
 				System.out.println("The length of the encrypted file bit is "+encryptedFileBuffer.length);
+				
+				
 				toServer.writeInt(1);
 				toServer.writeInt(numBytes);
 				toServer.writeInt(encryptedFileBuffer.length);

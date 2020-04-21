@@ -66,6 +66,8 @@ public class ServerSideCP2 {
 					int encryptedByteLen = fromClient.readInt();
 					byte [] block = new byte[encryptedByteLen];
 					fromClient.readFully(block, 0, encryptedByteLen);
+					
+					//TODO: Decrypt file chunks with symmetric key
 					byte[] decryptedBlock = decryptFileBytes(block);
 
 					// Therefore checking the actual length of the chunk of the file that is being sent shows if the file is at the end
@@ -118,12 +120,6 @@ public class ServerSideCP2 {
 					toClient.writeInt(serverAuthenticationProtocol.getServerCertlength());
 //					System.out.println("The encrypted server Cert is "+new String(serverAuthenticationProtocol.getSeverCertinByte()));
 					toClient.write(serverAuthenticationProtocol.getSeverCertinByte());
-					
-//					System.out.println("Closing connection...");
-////					 Close all connections 
-//					fromClient.close();
-//					toClient.close();
-//					connectionSocket.close();
 
 				}
 				
@@ -135,28 +131,26 @@ public class ServerSideCP2 {
 					int numBytes = fromClient.readInt();
 					byte[] encryptedSessionKey = new byte[numBytes];
 					fromClient.readFully(encryptedSessionKey,0,numBytes);
+
 					
-					// Decrypt using server private key
+					//TODO: Decrypt symmetric key using server private key
 					System.out.println("Decrpting session key.....");
 					Cipher sessionCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding"); 
 					sessionCipher.init(Cipher.DECRYPT_MODE, serverAuthenticationProtocol.getServerPrivateKey());
+
 					byte[] decryptedSessionKey = sessionCipher.doFinal(encryptedSessionKey);
 //					System.out.println("The session key is: "+new String(decryptedSessionKey));
 					
 					System.out.println("Saving Session Key.....");
 					sessionKey = new SecretKeySpec(decryptedSessionKey, 0, decryptedSessionKey.length,"AES");
 					
-//					System.out.println("Closing connection...");
-////					 Close all connections 
-//					fromClient.close();
-//					toClient.close();
-//					connectionSocket.close();
 				}
 
 			}
 		} catch (Exception e) {e.printStackTrace();}
 	}
 	
+	//TODO: function that decrypts file chunks with symmetric key
 	private static byte[] decryptFileBytes(byte[] fileBytes) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 		Cipher sessionCipher = Cipher.getInstance("AES/ECB/PKCS5Padding"); 
 		sessionCipher.init(Cipher.DECRYPT_MODE, sessionKey);

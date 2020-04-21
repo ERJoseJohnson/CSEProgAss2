@@ -127,12 +127,16 @@ public class ClientSideCP2 {
 				System.out.println("Server is not verified");
 			}
 			
-			// Make session key
+			//TODO: Generate session key
 	        KeyGenerator keyGen = KeyGenerator.getInstance("AES");
 	        keyGen.init(128);
 	        sessionKey = keyGen.generateKey();
 	        byte[] sessionKeyinBytes = sessionKey.getEncoded();
 //	        System.out.println("The session key is: "+new String(sessionKeyinBytes));
+	        
+	        /*
+	         * TODO: Encrypting and sending session key to server
+	         */
 	        
 	        // Encrypt session key with server public key
 			Cipher sessionCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding"); 
@@ -169,6 +173,8 @@ public class ClientSideCP2 {
 
 				System.out.println("Length of byte array from file stream buffer "+fromFileBuffer.length);
 				
+				
+			//TODO: encrypting file chunks with symmetric key, link to function on the bottom of this class
 				byte[] encryptedFileBuffer = encryptFileBytes(fromFileBuffer);
 				System.out.println("The length of the encrypted file bit is "+encryptedFileBuffer.length);
 				toServer.writeInt(1);
@@ -192,6 +198,8 @@ public class ClientSideCP2 {
 		System.out.println("Program took: " + timeTaken/1000000.0 + "ms to run");
 	}
 	
+	
+	//TODO: function to encrypte file chunks with symmetric key
 	private static byte[] encryptFileBytes(byte[] fileBytes) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 		Cipher sessionCipher = Cipher.getInstance("AES/ECB/PKCS5Padding"); 
 		sessionCipher.init(Cipher.ENCRYPT_MODE, sessionKey);

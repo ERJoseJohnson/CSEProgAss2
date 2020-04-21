@@ -38,8 +38,6 @@ public class ServerSideCP1 {
 
 					int numBytes = fromClient.readInt();
 					byte [] filename = new byte[numBytes];
-					// Must use read fully!
-					// See: https://stackoverflow.com/questions/25897627/datainputstream-read-vs-datainputstream-readfully
 					fromClient.readFully(filename, 0, numBytes);
 
 					fileOutputStream = new FileOutputStream("recv_CP1_"+new String(filename, 0, numBytes));
@@ -55,6 +53,8 @@ public class ServerSideCP1 {
 					int encryptedByteLen = fromClient.readInt();
 					byte [] block = new byte[encryptedByteLen];
 					fromClient.readFully(block, 0, encryptedByteLen);
+					
+					//TODO: Decrypt file chunks with server private key
 					byte[] decryptedBlock = serverAuthenticationProtocol.decryptFileBits(block);
 
 					// Therefore checking the actual length of the chunk of the file that is being sent shows if the file is at the end
@@ -85,10 +85,12 @@ public class ServerSideCP1 {
 					// See: https://stackoverflow.com/questions/25897627/datainputstream-read-vs-datainputstream-readfully
 					fromClient.readFully(nonce, 0, lenOfNonce);
 					System.out.println("The nonce received is "+new String(nonce));
+
 					
+					//TODO: Store  and encrypt nonce to serverAuth Obj
 					System.out.println("Encrypting nonce...");
-					// Store  and encrypt nonce to serverAuth Obj
 					serverAuthenticationProtocol.encryptNonce(nonce);
+					
 					
 					System.out.println("Sending encrypted nonce...");
 					// Send Encrypted nonce
@@ -112,6 +114,8 @@ public class ServerSideCP1 {
 					toClient.writeInt(2);
 					toClient.writeInt(serverAuthenticationProtocol.getServerCertlength());
 					System.out.println("The encrypted server Cert is "+new String(serverAuthenticationProtocol.getSeverCertinByte()));
+					
+					//TODO: Sending Server cert to the client
 					toClient.write(serverAuthenticationProtocol.getSeverCertinByte());
 					
 //					System.out.println("Closing connection...");
