@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.net.Socket;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Scanner;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -21,46 +22,65 @@ public class ClientSideCP2 {
 	
 	public static void main(String[] args) {
 
-    	String filename = "CodeSnippet.png";
-    	if (args.length > 0) filename = args[0];
-
+    	String filename;
+    	Scanner userInput = new Scanner(System.in);
+    	System.out.println("Please enter a filename:");
+//    	if (args.length > 0) filename = args[0];
+//
     	String serverAddress = "localhost";
-    	if (args.length > 1) filename = args[1];
-
+//    	if (args.length > 1) filename = args[1];
+//
     	int port = 4321;
-    	if (args.length > 2) port = Integer.parseInt(args[2]);
-
-		int numBytes = 0;
-
-		Socket clientSocket = null;
-
-        DataOutputStream toServer = null;
-        DataInputStream fromServer = null;
-
+//    	if (args.length > 2) port = Integer.parseInt(args[2]);
+    	
+    	int numBytes = 0;
+    	
+    	Socket clientSocket = null;
+    	
+    	DataOutputStream toServer = null;
+    	DataInputStream fromServer = null;
+    	
     	FileInputStream fileInputStream = null;
-        BufferedInputStream bufferedFileInputStream = null;
+    	BufferedInputStream bufferedFileInputStream = null;
+    	
+    	ClientAuthProtocol clientAuthentication;
+    	
+    	
+    	// Connect to server and get the input and output streams
+    	try {
+    		System.out.println("Establishing connection to server...");
+    	clientSocket = new Socket(serverAddress, port);
+    	toServer = new DataOutputStream(clientSocket.getOutputStream());
+    	fromServer = new DataInputStream(clientSocket.getInputStream());
+    	
+//    	System.out.println("Creating Client Auth Obj...");
+    	clientAuthentication = new ClientAuthProtocol("cacse.crt");
+    	
+    	while(true) {
 
 		long timeStarted = System.nanoTime();
-
-		try {
-
-			System.out.println("Establishing connection to server...");
-
-			// Connect to server and get the input and output streams
-			clientSocket = new Socket(serverAddress, port);
-			toServer = new DataOutputStream(clientSocket.getOutputStream());
-			fromServer = new DataInputStream(clientSocket.getInputStream());
-
-			System.out.println("Creating Client Auth Obj...");
 			
-			ClientAuthProtocol clientAuthentication = new ClientAuthProtocol("cacse.crt");
+			filename = userInput.nextLine();
 			
-			System.out.println("Generating Nonce...");
+			if(filename.equals("break")) {
+//				System.out.println("Okay we closing now");
+		        //Signal closing of server
+		        toServer.writeInt(99);
+		        
+		        bufferedFileInputStream.close();
+		        fileInputStream.close();
+
+				System.out.println("Closing connection...");
+				break;
+			}
+			
+			
 			// Generate Nonce
+			System.out.println("Generating Nonce...");
 			clientAuthentication.generateNonce(8);
 			
-			System.out.println("Sending nonce");
 			// Sending Nonce
+			System.out.println("Sending nonce");
 			toServer.writeInt(2);
 			toServer.writeInt(clientAuthentication.getNonceLength());
 			System.out.println("Nonce that is being sent is "+new String(clientAuthentication.getNonce()));
@@ -171,31 +191,27 @@ public class ClientSideCP2 {
 				numBytes = bufferedFileInputStream.read(fromFileBuffer);
 				fileEnded = numBytes < 117;
 
-				System.out.println("Length of byte array from file stream buffer "+fromFileBuffer.length);
-				
+				// Print normal file chunks
+				System.out.println("Unencrypted file chunk: "+new String(fromFileBuffer));
 				
 			//TODO: encrypting file chunks with symmetric key, link to function on the bottom of this class
 				byte[] encryptedFileBuffer = encryptFileBytes(fromFileBuffer);
-				System.out.println("The length of the encrypted file bit is "+encryptedFileBuffer.length);
+
+				// Print encrypted file chunks
+				System.out.println("Encrypted file chunk: "+ new String(encryptedFileBuffer));
+				
 				toServer.writeInt(1);
 				toServer.writeInt(numBytes);
 				toServer.writeInt(encryptedFileBuffer.length);
 				toServer.write(encryptedFileBuffer);
 				toServer.flush();
 			}
-	        
-	        // Signal end of file transmission
-//	        toServer.writeInt(99);
 
-	        bufferedFileInputStream.close();
-	        fileInputStream.close();
-
-			System.out.println("Closing connection...");
-
-		} catch (Exception e) {e.printStackTrace();}
-
-		long timeTaken = System.nanoTime() - timeStarted;
-		System.out.println("Program took: " + timeTaken/1000000.0 + "ms to run");
+	        long timeTaken = System.nanoTime() - timeStarted;
+	        System.out.println("Program took: " + timeTaken/1000000.0 + "ms to run");
+    	}
+		} 
+    	catch (Exception e) {e.printStackTrace();}
 	}
 	
 	

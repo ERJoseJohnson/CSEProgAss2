@@ -5,20 +5,24 @@ import java.io.DataOutputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.net.Socket;
+import java.util.Scanner;
 
 public class ClientSideCP1 {
 
 	public static void main(String[] args) {
 
-    	String filename = "100.txt";
-    	if (args.length > 0) filename = args[0];
-
+//    	String filename = "100.txt";
+//    	if (args.length > 0) filename = args[0];
+//
     	String serverAddress = "localhost";
-    	if (args.length > 1) filename = args[1];
-
+//    	if (args.length > 1) filename = args[1];
+//
     	int port = 4321;
-    	if (args.length > 2) port = Integer.parseInt(args[2]);
+//    	if (args.length > 2) port = Integer.parseInt(args[2]);
 
+    	String filename;
+    	Scanner userInput = new Scanner(System.in);
+    	
 		int numBytes = 0;
 
 		Socket clientSocket = null;
@@ -28,8 +32,10 @@ public class ClientSideCP1 {
 
     	FileInputStream fileInputStream = null;
         BufferedInputStream bufferedFileInputStream = null;
+        
+        ClientAuthProtocol clientAuthentication;
 
-		long timeStarted = System.nanoTime();
+//		long timeStarted = System.nanoTime();
 
 		try {
 
@@ -40,9 +46,27 @@ public class ClientSideCP1 {
 			toServer = new DataOutputStream(clientSocket.getOutputStream());
 			fromServer = new DataInputStream(clientSocket.getInputStream());
 
-			System.out.println("Creating Client Auth Obj...");
+//			System.out.println("Creating Client Auth Obj...");
 			
-			ClientAuthProtocol clientAuthentication = new ClientAuthProtocol("cacse.crt");
+			clientAuthentication = new ClientAuthProtocol("cacse.crt");
+			
+	    	while(true) {
+	    		long timeStarted = System.nanoTime();
+	    			
+	    			filename = userInput.nextLine();
+	    			
+	    			if(filename.equals("break")) {
+//	    				System.out.println("Okay we closing now");
+	    		        //Signal closing of server
+	    		        toServer.writeInt(99);
+	    		        
+	    		        bufferedFileInputStream.close();
+	    		        fileInputStream.close();
+
+	    				System.out.println("Closing connection...");
+	    				break;
+	    			}
+			
 			
 			// Generate Nonce
 			System.out.println("Generating Nonce...");
@@ -53,7 +77,7 @@ public class ClientSideCP1 {
 			System.out.println("Sending nonce");
 			toServer.writeInt(2);
 			toServer.writeInt(clientAuthentication.getNonceLength());
-			System.out.println("Nonce that is being sent is "+new String(clientAuthentication.getNonce()));
+//			System.out.println("Nonce that is being sent is "+new String(clientAuthentication.getNonce()));
 			toServer.write(clientAuthentication.getNonce());
 			
 			
@@ -66,14 +90,13 @@ public class ClientSideCP1 {
 					int lenOfEncryptedNonce = fromServer.readInt();
 					byte [] encryptedNonce = new byte[lenOfEncryptedNonce];
 
-					
-					System.out.println("The nonce received is "+new String(encryptedNonce));
+//					System.out.println("The nonce received is "+new String(encryptedNonce));
 					clientAuthentication.setEcnryptedNonce(encryptedNonce);
 					break;
 				}
 				else {
 					System.out.println("I did not receive the nonce :(");
-					break;
+//					break;
 				}
 				
 			}
@@ -130,9 +153,6 @@ public class ClientSideCP1 {
 			// Start with filename
 			toServer.writeInt(0);
 			toServer.writeInt(filename.getBytes().length);
-			// Encrypt filename byte array
-//			byte[] encryptedBytes = clientAuthentication.encryptFileBits(filename.getBytes());
-//			toServer.write(encryptedBytes);
 			toServer.write(filename.getBytes());
 			//toServer.flush();
 
@@ -147,13 +167,15 @@ public class ClientSideCP1 {
 				numBytes = bufferedFileInputStream.read(fromFileBuffer);
 				fileEnded = numBytes < 117;
 
-				System.out.println("Length of byte array from file stream buffer "+fromFileBuffer.length);
+				// Print the normal file chunks
+				System.out.println("Unencrypted file chunk: "+new String(fromFileBuffer));
 				
 				// Encrypting file chunks with server private key 
 				// show the function inside ClientAuthProtocol class
 				byte[] encryptedFileBuffer = clientAuthentication.encryptFileBits(fromFileBuffer);
-				System.out.println("The length of the encrypted file bit is "+encryptedFileBuffer.length);
 				
+				// Print encrypted bytes of file chunks
+				System.out.println("Encrypted file chunk: "+ new String(encryptedFileBuffer));
 				
 				toServer.writeInt(1);
 				toServer.writeInt(numBytes);
@@ -169,10 +191,10 @@ public class ClientSideCP1 {
 	        fileInputStream.close();
 
 			System.out.println("Closing connection...");
-
+			long timeTaken = System.nanoTime() - timeStarted;
+			System.out.println("Program took: " + timeTaken/1000000.0 + "ms to run");
+	    	}
 		} catch (Exception e) {e.printStackTrace();}
 
-		long timeTaken = System.nanoTime() - timeStarted;
-		System.out.println("Program took: " + timeTaken/1000000.0 + "ms to run");
 	}
 }
